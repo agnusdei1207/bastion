@@ -1,11 +1,8 @@
-build:
-	cd server && cargo build
+run:
+	cd server && cargo run
 
 clean:
 	cd server && cargo clean
-
-run:
-	cd server && cargo run
 
 release:
 	cd server && cargo build --release
