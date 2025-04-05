@@ -1,5 +1,5 @@
 use axum::{
-     routing::get, Extension,  Router
+     routing::get, Error, Extension, Router
 };
 use routes::routes;
 use tower_http::cors::{Any, CorsLayer};
@@ -14,7 +14,7 @@ mod cors;
 use crate::cors::cors::create_cors;
 
 #[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
+async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt()
         .with_max_level(Level::DEBUG)
         .init();
