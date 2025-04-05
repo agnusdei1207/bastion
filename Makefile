@@ -7,3 +7,5 @@ clean:
 release:
 	cd server && cargo build --release
 
+run-release:
+	./server/target/release/server
