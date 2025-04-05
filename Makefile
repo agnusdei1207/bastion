@@ -1,11 +1,11 @@
-run:
+run-axum:
 	cd axum && cargo run
 
-clean:
+clean-axum:
 	cd axum && cargo clean
 
-release:
-	cd axum && cargo build --release && ls -lh target/release/axum
+release-axum:
+	cd axum && cargo build --release && ls -lh target/release/axum && ./target/release/axum
 
 run-release:
 	./axum/target/release/axum
