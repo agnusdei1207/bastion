@@ -23,6 +23,8 @@ services:
       options:
         max-size: "10m"
         max-file: "1"
+    networks:
+      - tct-network
 
   fluentd:
     container_name: fluentd
@@ -38,6 +40,8 @@ services:
       options:
         max-size: "10m"
         max-file: "1"
+    networks:
+      - tct-network
 
   axum:
     container_name: axum
@@ -47,13 +51,15 @@ services:
     depends_on:
       - fluentd
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "1"
-    ports:
-      - "3000:3000"
+    networks:
+      - tct-network
 
 volumes:
   suricata-volume:
@@ -62,3 +68,7 @@ volumes:
     driver: local
   axum-volume:
     driver: local
+
+networks:
+  tct-network:
+    driver: bridge
