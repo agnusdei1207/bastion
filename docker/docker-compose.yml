@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  suricata:
+    container_name: suricata
+    image: agnusdei1207/suricata:latest
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+    volumes:
+      - suricata-volume:/var/log/suricata
+    command:
+      - "-c"
+      - "/etc/suricata/suricata.yaml"
+      - "-i"
+      - "eth0"
+      - "--af-packet"
+      - "--runmode=autofp"
+      - "--set=af-packet.0.copy-mode=ips"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+  fluentd:
+    container_name: fluentd
+    image: agnusdei1207/fluent:latest
+    volumes:
+      - suricata-volume:/var/log/suricata:rw
+      - fluentd-volume:/fluentd/state
+    depends_on:
+      - suricata
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+  axum:
+    container_name: axum
+    image: agnusdei1207/axum:latest
+    volumes:
+      - axum-volume:/app/logs
+    depends_on:
+      - fluentd
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+    ports:
+      - "3000:3000"
+
+volumes:
+  suricata-volume:
+    driver: local
+  fluentd-volume:
+    driver: local
+  axum-volume:
+    driver: local
