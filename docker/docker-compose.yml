@@ -5,10 +5,11 @@ services:
     container_name: suricata
     image: agnusdei1207/suricata:latest
     cap_add:
-      - SYS_NICE
-      - NET_ADMIN
+      - SYS_NICE # 낮은 우선순위 프로세스 허용
+      - NET_ADMIN # 네트워크 인터페이스 제어 허용
     volumes:
-      - suricata-volume:/var/log/suricata
+      - suricata-log:/var/log/suricata # Suricata 로그 저장
+      - suricata-config:/etc/suricata:rw # 설정 및 룰 공유
     command:
       - "-c"
       - "/etc/suricata/suricata.yaml"
@@ -30,8 +31,8 @@ services:
     container_name: fluentd
     image: agnusdei1207/fluent:latest
     volumes:
-      - suricata-volume:/var/log/suricata:rw
-      - fluentd-volume:/fluentd/state
+      - suricata-log:/var/log/suricata:rw # Suricata 로그 읽기
+      - fluentd-volume:/fluentd/state # Fluentd 내부 상태 저장
     depends_on:
       - suricata
     restart: unless-stopped
@@ -47,7 +48,10 @@ services:
     container_name: axum
     image: agnusdei1207/axum:latest
     volumes:
-      - axum-volume:/app/logs
+      - axum-volume:/app/logs # Axum 자체 로그 저장
+      - suricata-log:/shared/suricata:rw # Suricata 로그 접근
+      - suricata-config:/shared/suricata-config:rw # 설정 및 룰 접근 (Axum 전용 경로)
+      - fluentd-volume:/shared/fluentd:rw # Fluentd 상태 접근
     depends_on:
       - fluentd
     restart: unless-stopped
@@ -62,13 +66,16 @@ services:
       - tct-network
 
 volumes:
-  suricata-volume:
+  suricata-log: # Suricata 로그 저장
     driver: local
-  fluentd-volume:
+  suricata-config: # Suricata 설정 및 룰 공유
     driver: local
-  axum-volume:
+  fluentd-volume: # Fluentd 상태 저장
+    driver: local
+  axum-volume: # Axum 로그 저장
     driver: local
 
+# 🌐 내부 네트워크 정의
 networks:
   tct-network:
     driver: bridge
