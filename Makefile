@@ -1,11 +1,11 @@
 run:
-	cd server && cargo run
+	cd axum && cargo run
 
 clean:
-	cd server && cargo clean
+	cd axum && cargo clean
 
 release:
-	cd server && cargo build --release && ls -lh target/release/server
+	cd axum && cargo build --release && ls -lh target/release/axum
 
 run-release:
-	./server/target/release/server
+	./axum/target/release/axum
