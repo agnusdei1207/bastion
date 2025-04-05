@@ -5,7 +5,7 @@ clean:
 	cd server && cargo clean
 
 release:
-	cd server && cargo build --release && ls -lh server/target/release/server
+	cd server && cargo build --release && ls -lh target/release/server
 
 run-release:
 	./server/target/release/server
