@@ -242,7 +242,7 @@ async fn root() -> &'static str {
     "Friede sei mit euch!"
 }
 
-// Suricata 실행
+
 pub fn run_suricata() {
     info!("Suricata 실행 중...");
     
@@ -252,11 +252,21 @@ pub fn run_suricata() {
         return;
     }
     
-    // 환경 변수에서 Suricata 설정 파일 경로 확인
+    // 환경 변수에서 Suricata 설정 파일 경로 및 인터페이스 확인
     let config_path = env::var("SURICATA_CONFIG_PATH").unwrap_or_else(|_| String::from("/etc/suricata/suricata.yaml"));
     let interface = env::var("SURICATA_INTERFACE").unwrap_or_else(|_| String::from("eth0"));
     
-    match Command::new("suricata").args(&["-c", &config_path, "-i", &interface]).spawn() {
+    // Suricata 실행 명령어와 매개변수 설정
+    let mut cmd = Command::new("suricata");
+    cmd.args(&[
+        "-c", &config_path,
+        "-i", &interface,
+        "--af-packet",
+        "--runmode=autofp",
+        "--set=af-packet.0.copy-mode=ips"
+    ]);
+    
+    match cmd.spawn() {
         Ok(child) => {
             info!("Suricata 실행됨: {:?}", child);
         },
