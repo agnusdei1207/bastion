@@ -16,4 +16,4 @@ push-axum:
 	./docker/axum/push.sh
 
 docker-run:
-	docker run -p 3000:3000 --rm --name agnusdei1207/axum:latest
+	docker run -p 3000:3000 --rm --name axum agnusdei1207/axum:latest
