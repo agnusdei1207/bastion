@@ -9,3 +9,6 @@ release-axum:
 
 run-release:
 	./axum/target/release/axum
+
+push-axum:
+	./docker/axum/push.sh
