@@ -33,7 +33,6 @@ static LAST_PROCESSED_TIME: Lazy<std::sync::Mutex<SystemTime>> = Lazy::new(|| {
 static CONFIG: Lazy<Config> = Lazy::new(|| {
     Config::from_env()
 });
-// ---------------------------
 
 pub struct Config {
     pub central_api_server_url: String,
