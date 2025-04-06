@@ -19,9 +19,6 @@ WORKDIR /app
 # .env 등 설정 파일 복사
 COPY .env /app/.env
 
-# supervisord 설정 복사
-COPY docker/axum/supervisord.conf /etc/supervisord.conf
-
 # 빌드된 바이너리 복사
 COPY --from=builder /app/axum/target/x86_64-unknown-linux-musl/release/axum /app/axum
 
@@ -30,4 +27,4 @@ RUN chmod +x /app/axum
 # 포트 노출
 EXPOSE 3000
 
-ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT ["/app/axum"]
