@@ -428,3 +428,20 @@ async fn create_empty_log_file() {
         }
     }
 }
+
+
+pub async fn notify_error(message: &str) {
+    let client = Client::new();
+    let url = format!("{}/notify/error", CONFIG.central_api_server_url);
+
+    let payload = serde_json::json!({
+        "message": message,
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    });
+
+    if let Err(e) = client.post(&url).json(&payload).send().await {
+        error!("에러 알림 전송 실패: {}", e);
+    } else {
+        info!("에러 알림 전송 완료: {}", message);
+    }
+}
