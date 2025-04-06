@@ -1,3 +1,4 @@
+# axum
 run-axum:
 	cd axum && cargo run
 
@@ -10,6 +11,7 @@ release-axum:
 run-release:
 	./axum/target/release/axum
 
+# docker
 push-axum:
 	./docker/axum/push.sh
 
@@ -19,7 +21,7 @@ push-fluentd:
 push-suricata:
 	./docker/suricata/push.sh
 
-
+# docker-compose
 docker-compose-up:
 	docker-compose -f docker/docker-compose.yml up -d
 docker-compose-down:
