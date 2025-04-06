@@ -10,7 +10,7 @@ RUN gem install fluent-plugin-out-http --no-document
 # RUN mkdir -p /var/log/suricata && chmod 755 /var/log/suricata
 
 # Fluentd 설정 파일 복사
-COPY docker/fluent/fluent.conf /fluentd/etc/fluent.conf
+COPY docker/fluentd/fluent.conf /fluentd/etc/fluent.conf
 
 # Fluent 사용자로 전환
 USER fluent

@@ -29,7 +29,7 @@ services:
 
   fluentd:
     container_name: fluentd
-    image: agnusdei1207/fluent:latest
+    image: agnusdei1207/fluentd:latest
     volumes:
       - suricata-log:/var/log/suricata:rw # Suricata 로그 읽기
       - fluentd-volume:/fluentd/state # Fluentd 내부 상태 저장
