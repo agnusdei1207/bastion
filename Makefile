@@ -14,16 +14,11 @@ run-release:
 # docker
 push-axum:
 	./docker/axum/push.sh
-
-push-fluentd:
-	./docker/fluentd/push.sh
-
 push-suricata:
 	./docker/suricata/push.sh
 
 push-all:
 	./docker/axum/push.sh
-	./docker/fluentd/push.sh
 	./docker/suricata/push.sh
 
 # docker-compose
