@@ -27,14 +27,18 @@ services:
     networks:
       - tct-network
 
-  fluentd:
-    container_name: fluentd
-    image: agnusdei1207/fluentd:latest
+  axum:
+    container_name: axum
+    image: agnusdei1207/axum:latest
+    ports:
+      - "3000:3000" # 외부에서 접근 가능한 API 포트
     volumes:
-      - suricata-log:/var/log/suricata:rw # Suricata 로그 읽기
-      - fluentd-volume:/fluentd/state # Fluentd 내부 상태 저장
+      - axum-log:/logs # Axum 로그 저장 (독립 경로)
+      - suricata-log:/shared/suricata:ro # Suricata 로그 접근 (읽기 전용)
+      - suricata-config:/shared/suricata-config:ro # 설정 및 룰 접근 (읽기 전용)
+      - fluentd-volume:/shared/fluentd:ro # Fluentd 상태 접근 (읽기 전용)
     depends_on:
-      - suricata
+      - fluentd
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -44,19 +48,16 @@ services:
     networks:
       - tct-network
 
-  axum:
-    container_name: axum
-    image: agnusdei1207/axum:latest
+  fluentd:
+    container_name: fluentd
+    image: agnusdei1207/fluentd:latest
     volumes:
-      - axum-volume:/app/logs # Axum 자체 로그 저장
-      - suricata-log:/shared/suricata:rw # Suricata 로그 접근
-      - suricata-config:/shared/suricata-config:rw # 설정 및 룰 접근 (Axum 전용 경로)
-      - fluentd-volume:/shared/fluentd:rw # Fluentd 상태 접근
+      - suricata-log:/var/log/suricata:ro # Suricata 로그 읽기
+      - fluentd-volume:/fluentd/state # Fluentd 내부 상태 저장
     depends_on:
-      - fluentd
+      - suricata
+      - axum
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     logging:
       driver: "json-file"
       options:
@@ -66,16 +67,15 @@ services:
       - tct-network
 
 volumes:
-  suricata-log: # Suricata 로그 저장
+  suricata-log: # Suricata 로그 저장소
     driver: local
-  suricata-config: # Suricata 설정 및 룰 공유
+  suricata-config: # Suricata 설정 공유
     driver: local
-  fluentd-volume: # Fluentd 상태 저장
+  fluentd-volume: # Fluentd 내부 상태 저장
     driver: local
-  axum-volume: # Axum 로그 저장
+  axum-log: # Axum 로그 저장소 (기존 /app/logs 사용 → 충돌 방지 위해 변경)
     driver: local
 
-# 🌐 내부 네트워크 정의
 networks:
   tct-network:
     driver: bridge
