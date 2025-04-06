@@ -14,15 +14,6 @@ run-release:
 # docker
 push-axum:
 	./docker/axum/push.sh
-push-suricata:
-	./docker/suricata/push.sh
 
-push-all:
-	./docker/axum/push.sh
-	./docker/suricata/push.sh
-
-# docker-compose
-docker-compose-up:
-	docker-compose -f docker/docker-compose.yml up -d
-docker-compose-down:
-	docker-compose -f docker/docker-compose.yml down -v
+docker-run:
+	docker run -p 3000:3000 --rm --name agnusdei1207/axum:latest
