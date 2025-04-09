@@ -20,8 +20,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "1"
+        max-size: "50m"
+        max-file: "3"
     networks:
       - bastion-network
 
@@ -41,8 +41,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "1"
+        max-size: "50m"
+        max-file: "3"
     networks:
       - bastion-network
 
@@ -58,19 +58,19 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "1"
+        max-size: "50m"
+        max-file: "3"
     networks:
       - bastion-network
 
 volumes:
-  suricata-log: # Suricata 로그 저장소
+  suricata-log:
     driver: local
-  suricata-config: # Suricata 설정 공유
+  suricata-config:
     driver: local
-  fluentd-volume: # Fluentd 내부 상태 저장
+  fluentd-volume:
     driver: local
-  axum-log: # Axum 로그 저장소 (기존 /app/logs 사용 → 충돌 방지 위해 변경)
+  axum-log:
     driver: local
 
 networks:
