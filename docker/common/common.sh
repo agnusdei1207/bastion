@@ -14,6 +14,7 @@ if [ ! -f $DOCKERFILE ]; then
     echo "❌ $DOCKERFILE 파일을 찾을 수 없습니다."
     exit 1
 fi
+
 docker build --progress=auto --platform linux/amd64 -t $DOCKER_IMAGE -f $DOCKERFILE . --no-cache
 
 # 빌드된 이미지 푸시
