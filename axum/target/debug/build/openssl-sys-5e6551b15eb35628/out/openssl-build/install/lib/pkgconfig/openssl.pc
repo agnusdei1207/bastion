@@ -1,0 +1,9 @@
+prefix=/Users/agnusdei/workspace/bastion/axum/target/debug/build/openssl-sys-5e6551b15eb35628/out/openssl-build/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include 
+
+Name: OpenSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Version: 3.4.1
+Requires: libssl libcrypto

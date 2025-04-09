@@ -3,11 +3,11 @@ services:
     container_name: suricata
     image: agnusdei1207/suricata:latest
     cap_add:
-      - SYS_NICE # 낮은 우선순위 프로세스 허용
-      - NET_ADMIN # 네트워크 인터페이스 제어 허용
+      - SYS_NICE
+      - NET_ADMIN
     volumes:
-      - suricata-log:/var/log/suricata # Suricata 로그 저장
-      - suricata-config:/etc/suricata:rw # 설정 및 룰 공유
+      - suricata-log:/var/log/suricata
+      - suricata-config:/etc/suricata:rw
     command:
       - "-c"
       - "/etc/suricata/suricata.yaml"
@@ -23,18 +23,18 @@ services:
         max-size: "10m"
         max-file: "1"
     networks:
-      - tct-network
+      - bastion-network
 
   axum:
     container_name: axum
     image: agnusdei1207/axum:latest
     ports:
-      - "3000:3000" # 외부에서 접근 가능한 API 포트
+      - "3000:3000"
     volumes:
-      - axum-log:/logs # Axum 로그 저장 (독립 경로)
-      - suricata-log:/shared/suricata:ro # Suricata 로그 접근 (읽기 전용)
-      - suricata-config:/shared/suricata-config:ro # 설정 및 룰 접근 (읽기 전용)
-      - fluentd-volume:/shared/fluentd:ro # Fluentd 상태 접근 (읽기 전용)
+      - axum-log:/logs
+      - suricata-log:/shared/suricata:ro
+      - suricata-config:/shared/suricata-config:ro
+      - fluentd-volume:/shared/fluentd:ro
     depends_on:
       - fluentd
     restart: unless-stopped
@@ -44,14 +44,14 @@ services:
         max-size: "10m"
         max-file: "1"
     networks:
-      - tct-network
+      - bastion-network
 
   fluentd:
     container_name: fluentd
     image: agnusdei1207/fluentd:latest
     volumes:
-      - suricata-log:/var/log/suricata:ro # Suricata 로그 읽기
-      - fluentd-volume:/fluentd/state # Fluentd 내부 상태 저장
+      - suricata-log:/var/log/suricata:ro
+      - fluentd-volume:/fluentd/state
     depends_on:
       - suricata
     restart: unless-stopped
@@ -61,7 +61,7 @@ services:
         max-size: "10m"
         max-file: "1"
     networks:
-      - tct-network
+      - bastion-network
 
 volumes:
   suricata-log: # Suricata 로그 저장소
@@ -74,5 +74,5 @@ volumes:
     driver: local
 
 networks:
-  tct-network:
+  bastion-network:
     driver: bridge
