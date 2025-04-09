@@ -36,9 +36,7 @@ docker-compose-down:
 ssh:
 	ssh -i t2.pem ubuntu@216.47.98.170
 scp:
-	scp -i t2.pem docker/docker-compose.yml ubuntu@216.47.98.170:/home/ubuntu/docker-compose.yml && \
-scp -i t2.pem script/provisioning.sh ubuntu@216.47.98.170:/home/ubuntu/provisioning.sh
-
-provisioning: 
+	scp -i t2.pem docker/docker-compose.yml ubuntu@216.47.98.170:/home/ubuntu/docker-compose.yml
+	scp -i t2.pem script/provisioning.sh ubuntu@216.47.98.170:/home/ubuntu/provisioning.sh
+provisioning:
 	ssh -i t2.pem ubuntu@216.47.98.170 'bash /home/ubuntu/provisioning.sh'
-
