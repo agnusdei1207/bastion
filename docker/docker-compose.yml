@@ -2,6 +2,7 @@ services:
   suricata:
     container_name: suricata
     image: agnusdei1207/suricata:latest
+    network_mode: host
     cap_add:
       - SYS_NICE
       - NET_ADMIN
@@ -22,29 +23,6 @@ services:
       options:
         max-size: "50m"
         max-file: "3"
-    networks:
-      - bastion-network
-
-  axum:
-    container_name: axum
-    image: agnusdei1207/axum:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - axum-log:/logs
-      - suricata-log:/shared/suricata:ro
-      - suricata-config:/shared/suricata-config:ro
-      - fluentd-volume:/shared/fluentd:ro
-    depends_on:
-      - fluentd
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "3"
-    networks:
-      - bastion-network
 
   fluentd:
     container_name: fluentd
@@ -63,6 +41,27 @@ services:
     networks:
       - bastion-network
 
+  axum:
+    container_name: axum
+    image: agnusdei1207/axum:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - axum-volume:/logs
+      - suricata-log:/shared/suricata:ro
+      - suricata-config:/shared/suricata-config:ro
+      - fluentd-volume:/shared/fluentd:ro
+    depends_on:
+      - fluentd
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - bastion-network
+
 volumes:
   suricata-log:
     driver: local
@@ -70,7 +69,7 @@ volumes:
     driver: local
   fluentd-volume:
     driver: local
-  axum-log:
+  axum-volume:
     driver: local
 
 networks:
