@@ -56,4 +56,12 @@ sudo swapon --show
 echo "🔁 [16] systemd 재적용 중..."
 sudo systemctl daemon-reexec
 
+# 도커 컴포즈 실행
+echo "🚀 [17] docker compose up -d"
+docker compose up -d || true
+echo "🔄 [18] docker compose logs -f"
+docker compose logs -f || true
+echo "🔄 [19] sleep & exit"
+sleep 5 && exit 0 || true
+
 echo "🎉 [✓] Docker 및 Swap 설정 완료! 로그아웃 후 다시 로그인해야 docker 명령어가 sudo 없이 작동합니다."

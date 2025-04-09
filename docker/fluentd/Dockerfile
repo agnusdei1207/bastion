@@ -1,18 +1,21 @@
-# Fluentd 경량 이미지
-FROM fluent/fluentd:v1.17.1-1.0
+FROM fluent/fluentd:v1.16-1
 
 USER root
 
-# HTTP 출력 플러그인만 설치
-RUN gem install fluent-plugin-out-http --no-document
+# 필요한 플러그인만 설치하여 이미지 크기 최소화
+RUN apk add --no-cache --update --virtual .build-deps \
+      sudo build-base ruby-dev \
+    && gem install fluent-plugin-out-http fluent-plugin-parser --no-document \
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/*
 
-# Suricata 로그 디렉토리 생성 (외부 마운트면 생략 가능)
-# RUN mkdir -p /var/log/suricata && chmod 755 /var/log/suricata
+# Suricata 로그 디렉토리 생성 및 권한 설정
+RUN mkdir -p /var/log/suricata && chown -R fluent:fluent /var/log/suricata
 
 # Fluentd 설정 파일 복사
 COPY docker/fluentd/fluent.conf /fluentd/etc/fluent.conf
 
-# Fluent 사용자로 전환
+# 비루트 사용자로 전환하여 보안 강화
 USER fluent
 
 # Fluentd 실행

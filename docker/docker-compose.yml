@@ -1,8 +1,10 @@
+version: "3.8"
+
 services:
   suricata:
     container_name: suricata
     image: agnusdei1207/suricata:latest
-    network_mode: host
+    network_mode: host # Suricata는 호스트 네트워크 필요
     cap_add:
       - SYS_NICE
       - NET_ADMIN
@@ -30,16 +32,19 @@ services:
     volumes:
       - suricata-log:/var/log/suricata:ro
       - fluentd-volume:/fluentd/state
+    environment:
+      - FLUENTD_LOG_LEVEL=debug
     depends_on:
-      - suricata
+      suricata:
+        condition: service_started
     restart: unless-stopped
+    networks:
+      - bastion-network
     logging:
       driver: "json-file"
       options:
         max-size: "50m"
         max-file: "3"
-    networks:
-      - bastion-network
 
   axum:
     container_name: axum
@@ -48,19 +53,17 @@ services:
       - "3000:3000"
     volumes:
       - axum-volume:/logs
-      - suricata-log:/shared/suricata:ro
-      - suricata-config:/shared/suricata-config:ro
-      - fluentd-volume:/shared/fluentd:ro
     depends_on:
-      - fluentd
+      fluentd:
+        condition: service_started
     restart: unless-stopped
+    networks:
+      - bastion-network
     logging:
       driver: "json-file"
       options:
         max-size: "50m"
         max-file: "3"
-    networks:
-      - bastion-network
 
 volumes:
   suricata-log:
@@ -75,3 +78,4 @@ volumes:
 networks:
   bastion-network:
     driver: bridge
+    attachable: true
