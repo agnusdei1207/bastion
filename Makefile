@@ -31,3 +31,7 @@ docker-compose-up:
 	docker-compose -f docker/docker-compose.yml up -d
 docker-compose-down:
 	docker-compose -f docker/docker-compose.yml down -v
+
+# ssh
+ssh:
+	ssh -i t2.pem ubuntu@216.47.98.209
