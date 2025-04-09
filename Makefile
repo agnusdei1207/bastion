@@ -1,26 +1,20 @@
 # axum
 run-axum:
 	cd axum && cargo run
-
 clean-axum:
 	cd axum && cargo clean
-
 release-axum:
 	cd axum && cargo build --release && ls -lh target/release/axum && ./target/release/axum
-
 run-release:
 	./axum/target/release/axum
 
 # docker
 push-axum:
 	./docker/axum/push.sh
-
 push-fluentd:
 	./docker/fluentd/push.sh
-
 push-suricata:
 	./docker/suricata/push.sh
-
 push-all:
 	./docker/axum/push.sh
 	./docker/fluentd/push.sh
@@ -38,7 +32,6 @@ ssh:
 scp:
 	scp -i t2.pem docker/docker-compose.yml ubuntu@216.47.98.170:/home/ubuntu/docker-compose.yml && \
 scp -i t2.pem script/provisioning.sh ubuntu@216.47.98.170:/home/ubuntu/provisioning.sh
-
 provisioning: 
 	ssh -i t2.pem ubuntu@216.47.98.170 'bash /home/ubuntu/provisioning.sh'
 
