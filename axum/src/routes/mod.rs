@@ -1,8 +1,8 @@
 use axum::Router;
 
-pub mod post;
+pub mod eve_json_log;
 
 pub fn routes() -> Router {
     Router::new()
-    .merge(post::post_route())
+    .merge(eve_json_log::post_eve_json_log())
 }
