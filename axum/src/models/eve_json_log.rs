@@ -12,7 +12,7 @@ pub struct EveJsonLog {
     pub event_type: Option<String>,
     pub src_ip: Option<String>,
     pub dest_ip: Option<String>,
-    
+
     #[serde(default)]  // 없으면 기본값
     pub tags: Vec<String>,
 }

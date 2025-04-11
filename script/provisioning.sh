@@ -32,7 +32,7 @@ echo "👤 [9] docker 그룹에 사용자 추가 중..."
 sudo usermod -aG docker $USER || true
 
 echo "✅ [10] Docker 버전 확인..."
-docker --version || true
+sudo docker --version || true
 
 echo "✅ [11] Docker Compose 버전 확인..."
 docker compose version || true
@@ -58,9 +58,9 @@ sudo systemctl daemon-reexec
 
 # 도커 컴포즈 실행
 echo "🚀 [17] docker compose up -d"
-docker compose up -d || true
+sudo docker compose up -d || true
 echo "🔄 [18] docker compose logs -f"
-docker compose logs -f || true
+sudo docker compose logs -f || true
 echo "🔄 [19] sleep & exit"
 sleep 5 && exit 0 || true
 
