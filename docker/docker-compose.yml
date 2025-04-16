@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   suricata:
     container_name: suricata
