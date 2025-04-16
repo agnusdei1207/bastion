@@ -9,6 +9,8 @@ run-release:
 	./axum/target/release/axum
 
 # docker
+sqlx-prepare:
+	cd axum && cargo sqlx prepare
 push-axum:
 	./docker/axum/push.sh
 push-fluentd:
