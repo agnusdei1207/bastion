@@ -7,12 +7,9 @@ use axum::{
     response::IntoResponse,
 };
 use tracing::{error, info};
-use tokio::process::Command;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 
 use crate::models::rule::{ApiResponse, RuleRequest, Rule, RulesList};
-use crate::utils::suricata::{extract_option, generate_rule_id, reload_suricata_rules};
+use crate::utils::suricata::{extract_option, generate_rule_id, reload_suricata_rules, validate_rule_syntax};
 
 // 룰 추가 핸들러
 pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
@@ -355,6 +352,8 @@ pub async fn list_rules() -> impl IntoResponse {
             action,
         });
     }
+
+    let count = rules.len();
     
     (
         StatusCode::OK,
@@ -363,7 +362,7 @@ pub async fn list_rules() -> impl IntoResponse {
             message: None,
             data: Some(RulesList {
                 rules,
-                count: rules.len(),
+                count,
             }),
         })
     )
