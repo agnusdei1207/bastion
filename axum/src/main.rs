@@ -2,7 +2,6 @@ use axum::{
      routing::get, Error, Extension, Router
 };
 use routes::routes;
-use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, Level};
 use tracing_subscriber;
 
@@ -26,7 +25,14 @@ async fn main() -> Result<(), Error> {
             create_cors()
         );
 
-    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener: tokio::net::TcpListener = match tokio::net::TcpListener::bind("0.0.0.0:3000").await{
+        Ok(listener)=> listener,
+        Err(e)=>{
+            eprint!("Failed to bind to port 3000: {}", e);
+            return Err(Error::new(e.to_string()));
+        }
+    };
+
     info!("Server is running on http://0.0.0.0:3000");
     axum::serve(listener, app).await.unwrap();
  
