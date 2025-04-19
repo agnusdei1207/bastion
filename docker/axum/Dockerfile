@@ -2,6 +2,8 @@ FROM messense/rust-musl-cross:x86_64-musl AS builder
 WORKDIR /app
 COPY axum ./axum
 RUN cd axum && cargo build --release
+RUN apt-get update && apt-get install -y docker.io
+
 
 FROM alpine:latest
 WORKDIR /app

@@ -9,6 +9,7 @@ services:
     volumes:
       - suricata-log:/var/log/suricata
       - suricata-config:/etc/suricata:rw
+      - suricata-rules:/var/lib/suricata/rules:rw
     command:
       - "-c"
       - "/etc/suricata/suricata.yaml"
@@ -30,6 +31,7 @@ services:
     volumes:
       - suricata-log:/var/log/suricata:ro
       - fluentd-volume:/fluentd/state
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - FLUENTD_LOG_LEVEL=debug
     depends_on:
@@ -51,6 +53,8 @@ services:
       - "3000:3000"
     volumes:
       - axum-volume:/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - suricata-rules:/var/lib/suricata/rules:rw
     depends_on:
       fluentd:
         condition: service_started
@@ -67,6 +71,8 @@ volumes:
   suricata-log:
     driver: local
   suricata-config:
+    driver: local
+  suricata-rules:
     driver: local
   fluentd-volume:
     driver: local
