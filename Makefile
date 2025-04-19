@@ -22,12 +22,6 @@ push-all:
 	./docker/fluentd/push.sh
 	./docker/suricata/push.sh
 
-# docker-compose
-docker-compose-up:
-	docker-compose -f docker/docker-compose.yml up -d
-docker-compose-down:
-	docker-compose -f docker/docker-compose.yml down -v
-
 # ssh
 ssh:
 	ssh -i k.pem ubuntu@216.47.98.91
