@@ -33,9 +33,17 @@ async fn main() -> Result<(), Error> {
         }
     };
 
-    info!("Server is running on http://0.0.0.0:3000");
-    axum::serve(listener, app).await.unwrap();
- 
+    info!("Server is running on port 3000");
+    match axum::serve(listener, app).await {
+        Ok(()) => {
+            info!("✅ Server started successfully");
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to start server: {}", e);
+            return Err(Error::new(e.to_string()));
+        }
+    }
+
     Ok(())
 }
  
