@@ -13,3 +13,30 @@ pub struct RuleResponse {
     pub message: String,
     pub rule_id: Option<String>,
 }
+
+
+
+#[derive(Serialize)]
+pub struct RuleInfo {
+    pub id: String,
+    pub content: String,
+    pub sid: Option<String>,
+    pub msg: Option<String>,
+    pub action: String,
+}
+
+#[derive(Serialize)]
+pub struct RulesListResponse {
+    pub success: bool,
+    pub rules: Vec<RuleInfo>,
+    pub count: usize,
+}
+
+ 
+#[derive(Serialize)]
+pub struct RuleDetailResponse {
+    pub success: bool,
+    pub rule_content: Option<String>,
+    pub rule_id: Option<String>,
+    pub message: Option<String>,
+}
