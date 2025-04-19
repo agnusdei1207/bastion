@@ -16,7 +16,7 @@ RUN mkdir -p /var/log/suricata && chown -R fluent:fluent /var/log/suricata
 COPY docker/fluentd/fluent.conf /fluentd/etc/fluent.conf
 
 # 비루트 사용자로 전환하여 보안 강화
-USER fluent
+USER fluentd
 
 # Fluentd 실행
 CMD ["fluentd", "-c", "/fluentd/etc/fluent.conf", "-p", "/fluentd/plugins"]
