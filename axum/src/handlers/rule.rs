@@ -261,7 +261,7 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
     match reload_suricata_rules().await {
         Ok(_) => (
             StatusCode::OK,
-            Json(ApiResponse::<String> {
+            Json(ApiResponse::<()> {
                 success: true,
                 message: Some("Rule deleted and changes applied successfully".to_string()),
                 data:None
@@ -269,7 +269,7 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
         ),
         Err(e) => (
             StatusCode::PARTIAL_CONTENT,
-            Json(ApiResponse::<String> {
+            Json(ApiResponse::<()> {
                 success: true,
                 message: Some(format!("Rule deleted but reload failed: {}", e)),
                 data: None
