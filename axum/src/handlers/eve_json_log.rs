@@ -36,10 +36,10 @@ pub async fn send_eve_json_log(
     {
         Ok(res) => res,
         Err(e) => {
-            error!("외부 API 요청 실패: {}", e);
+            error!("외부 API 호출 실패: {}", e);
             return Err((
                 StatusCode::BAD_GATEWAY,
-                "업스트림 서버 연결 실패".to_string(),
+                "업스트림 서버 오류".to_string(),
             ));
         }
     };
@@ -47,10 +47,18 @@ pub async fn send_eve_json_log(
     if !response.status().is_success() {
         let status = response.status();
         warn!("외부 API 오류 응답: {}", status);
-        return Err((
-            StatusCode::BAD_GATEWAY,
-            format!("업스트림 서버 오류: {}", status),
-        ));
+        let error_response = match status.as_u16(){
+            400 => (StatusCode::BAD_GATEWAY, "잘못된 요청".to_string()),
+            401 => (StatusCode::UNAUTHORIZED, "인증 실패".to_string()),
+            403 => (StatusCode::FORBIDDEN, "접근 거부".to_string()),
+            404 => (StatusCode::NOT_FOUND, "리소스 없음".to_string()),
+            500 => (StatusCode::INTERNAL_SERVER_ERROR, "서버 오류".to_string()),
+            502 => (StatusCode::BAD_GATEWAY, "게이트웨이 오류".to_string()),
+            503 => (StatusCode::SERVICE_UNAVAILABLE, "서비스 사용 불가".to_string()),
+            504 => (StatusCode::GATEWAY_TIMEOUT, "타임아웃".to_string()),
+            _ => (StatusCode::BAD_GATEWAY, "알 수 없는 오류".to_string()),
+        };
+        return Err(error_response);
     }
 
     match response.json::<EveJsonLog>().await {
