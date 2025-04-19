@@ -9,6 +9,7 @@ mod handlers;
 mod models;
 mod routes;
 mod cors;
+mod utils;
 
 use crate::cors::cors::create_cors;
 

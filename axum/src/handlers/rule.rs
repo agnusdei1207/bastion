@@ -1,22 +1,23 @@
 use std::path::Path;
 use std::fs::{self, OpenOptions, File};
-use std::io::{Write, Read, Seek, SeekFrom};
+use std::io::{Write, Read};
 use axum::{
     extract::{Json, Path as PathExtractor},
     http::StatusCode,
     response::IntoResponse,
 };
 use tracing::{error, info};
-use crate::models::rule::{RuleDetailResponse, RuleInfo, RuleRequest, RulesListResponse};
-use crate::models::rule::RuleResponse;
 use tokio::process::Command;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
+use crate::models::rule::{ApiResponse, RuleRequest, Rule, RulesList};
+use crate::utils::suricata::{extract_option, generate_rule_id, reload_suricata_rules};
+
 // 룰 추가 핸들러
 pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
     let rules_dir = "/var/lib/suricata/rules";
-    let filename = "custom.rules";
+    let filename = payload.filename.as_deref().unwrap_or("custom.rules");
 
     let file_path = Path::new(rules_dir).join(filename);
 
@@ -24,10 +25,10 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
     if let Err(validation_error) = validate_rule_syntax(&payload.rule_content) {
         return (
             StatusCode::BAD_REQUEST,
-            Json(RuleResponse {
+            Json(ApiResponse::<()> {
                 success: false,
-                message: validation_error,
-                rule_id: None,
+                message: Some(validation_error),
+                data: None,
             })
         );
     }
@@ -39,10 +40,10 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
                 error!("Failed to create directory: {}", e);
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(RuleResponse {
+                    Json(ApiResponse::<()> {
                         success: false,
-                        message: format!("Failed to create directory: {}", e),
-                        rule_id: None,
+                        message: Some(format!("Failed to create directory: {}", e)),
+                        data: None,
                     })
                 );
             }
@@ -78,10 +79,10 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
             error!("Failed to open file: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(RuleResponse {
+                Json(ApiResponse::<()> {
                     success: false,
-                    message: format!("Failed to open file: {}", e),
-                    rule_id: None,
+                    message: Some(format!("Failed to open file: {}", e)),
+                    data: None,
                 })
             );
         }
@@ -98,10 +99,10 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
         error!("Failed to write to file: {}", e);
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(RuleResponse {
+            Json(ApiResponse::<()> {
                 success: false,
-                message: format!("Failed to write to file: {}", e),
-                rule_id: None,
+                message: Some(format!("Failed to write to file: {}", e)),
+                data: None,
             })
         );
     }
@@ -114,24 +115,25 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
 
     // 성공 응답
     let rule_id = generate_rule_id(&rule_content);
+    
     info!("Rule added successfully: {} with ID: {}", rule_content, rule_id);
     
     // 추가된 규칙에 대해 Suricata 규칙 리로드 명령 실행
     match reload_suricata_rules().await {
         Ok(_) => (
             StatusCode::CREATED,
-            Json(RuleResponse {
+            Json(ApiResponse {
                 success: true,
-                message: "Rule added and applied successfully".to_string(),
-                rule_id: Some(rule_id),
+                message: Some("Rule added and applied successfully".to_string()),
+                data: None,
             })
         ),
         Err(e) => (
             StatusCode::PARTIAL_CONTENT,
-            Json(RuleResponse {
+            Json(ApiResponse {
                 success: true,
-                message: format!("Rule added but reload failed: {}", e),
-                rule_id: Some(rule_id),
+                message: Some(format!("Rule added but reload failed: {}", e)),
+                data: None,
             })
         )
     }
@@ -148,10 +150,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
     if !file_path.exists() {
         return (
             StatusCode::NOT_FOUND,
-            Json(RuleResponse {
+            Json(ApiResponse::<()> {
                 success: false,
-                message: "Rules file does not exist".to_string(),
-                rule_id: None,
+                message: Some("Rules file does not exist".to_string()),
+                data: None,
             })
         );
     }
@@ -164,10 +166,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
                 error!("Failed to read rules file: {}", e);
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(RuleResponse {
+                    Json(ApiResponse::<()> {
                         success: false,
-                        message: format!("Failed to read rules file: {}", e),
-                        rule_id: None,
+                        message: Some(format!("Failed to read rules file: {}", e)),
+                        data: None,
                     })
                 );
             }
@@ -176,10 +178,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
             error!("Failed to open rules file: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(RuleResponse {
+                Json(ApiResponse::<()> {
                     success: false,
-                    message: format!("Failed to open rules file: {}", e),
-                    rule_id: None,
+                    message: Some(format!("Failed to open rules file: {}", e)),
+                    data: None,
                 })
             );
         }
@@ -209,10 +211,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
     if !found_rule {
         return (
             StatusCode::NOT_FOUND,
-            Json(RuleResponse {
+            Json(ApiResponse::<()> {
                 success: false,
-                message: format!("Rule with ID '{}' not found", rule_id),
-                rule_id: None,
+                message: Some(format!("Rule with ID '{}' not found", rule_id)),
+                data: None,
             })
         );
     }
@@ -225,10 +227,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
                 error!("Failed to write updated rules: {}", e);
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(RuleResponse {
+                    Json(ApiResponse::<()> {
                         success: false,
-                        message: format!("Failed to write updated rules: {}", e),
-                        rule_id: None,
+                        message: Some(format!("Failed to write updated rules: {}", e)),
+                        data: None,
                     })
                 );
             }
@@ -242,10 +244,10 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
             error!("Failed to create rules file: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(RuleResponse {
+                Json(ApiResponse::<()> {
                     success: false,
-                    message: format!("Failed to create rules file: {}", e),
-                    rule_id: None,
+                    message: Some(format!("Failed to create rules file: {}", e)),
+                    data: None,
                 })
             );
         }
@@ -254,21 +256,23 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
     // 룰 제거 후 Suricata 리로드
     info!("Rule with ID {} removed successfully", rule_id);
     
+    // 에러가 있었던 부분: 비일관적 타입 사용
+    // 삭제 응답에서는 id만 반환 (룰 객체 대신)
     match reload_suricata_rules().await {
         Ok(_) => (
             StatusCode::OK,
-            Json(RuleResponse {
+            Json(ApiResponse::<String> {
                 success: true,
-                message: "Rule deleted and changes applied successfully".to_string(),
-                rule_id: Some(rule_id),
+                message: Some("Rule deleted and changes applied successfully".to_string()),
+                data:None
             })
         ),
         Err(e) => (
             StatusCode::PARTIAL_CONTENT,
-            Json(RuleResponse {
+            Json(ApiResponse::<String> {
                 success: true,
-                message: format!("Rule deleted but reload failed: {}", e),
-                rule_id: Some(rule_id),
+                message: Some(format!("Rule deleted but reload failed: {}", e)),
+                data: None
             })
         )
     }
@@ -284,10 +288,13 @@ pub async fn list_rules() -> impl IntoResponse {
     if !file_path.exists() {
         return (
             StatusCode::OK,
-            Json(RulesListResponse {
+            Json(ApiResponse {
                 success: true,
-                rules: Vec::new(),
-                count: 0,
+                message: None,
+                data: Some(RulesList {
+                    rules: Vec::new(),
+                    count: 0,
+                }),
             })
         );
     }
@@ -300,10 +307,10 @@ pub async fn list_rules() -> impl IntoResponse {
                 error!("Failed to read rules file: {}", e);
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(RulesListResponse {
+                    Json(ApiResponse::<RulesList> {
                         success: false,
-                        rules: Vec::new(),
-                        count: 0,
+                        message: Some(format!("Failed to read rules file: {}", e)),
+                        data: None,
                     })
                 );
             }
@@ -312,10 +319,10 @@ pub async fn list_rules() -> impl IntoResponse {
             error!("Failed to open rules file: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(RulesListResponse {
+                Json(ApiResponse::<RulesList> {
                     success: false,
-                    rules: Vec::new(),
-                    count: 0,
+                    message: Some(format!("Failed to open rules file: {}", e)),
+                    data: None,
                 })
             );
         }
@@ -338,9 +345,9 @@ pub async fn list_rules() -> impl IntoResponse {
         let msg = extract_option(line, "msg");
         
         // action 추출 (alert, drop 등)
-        let action = line.split_whitespace().next().unwrap_or("unknown").to_string();
+        let action = line.split_whitespace().next().map(String::from);
         
-        rules.push(RuleInfo {
+        rules.push(Rule {
             id,
             content: line.to_string(),
             sid,
@@ -351,16 +358,19 @@ pub async fn list_rules() -> impl IntoResponse {
     
     (
         StatusCode::OK,
-        Json(RulesListResponse {
+        Json(ApiResponse {
             success: true,
-            count: rules.len(),
-            rules,
+            message: None,
+            data: Some(RulesList {
+                rules,
+                count: rules.len(),
+            }),
         })
     )
 }
 
 // 특정 ID의 룰 상세 조회 핸들러 (단순화 버전)
-pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -> impl IntoResponse {
+pub async fn get_rule_by_id(PathExtractor(rule_id): PathExtractor<String>) -> impl IntoResponse {
     let rules_dir = "/var/lib/suricata/rules";
     let filename = "custom.rules";
     let file_path = Path::new(rules_dir).join(filename);
@@ -369,11 +379,10 @@ pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -
     if !file_path.exists() {
         return (
             StatusCode::NOT_FOUND,
-            Json(RuleDetailResponse {
+            Json(ApiResponse::<Rule> {
                 success: false,
-                rule_content: None,
-                rule_id: None,
                 message: Some("Rules file does not exist".to_string()),
+                data: None,
             })
         );
     }
@@ -386,11 +395,10 @@ pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -
                 error!("Failed to read rules file: {}", e);
                 return (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(RuleDetailResponse {
+                    Json(ApiResponse::<Rule> {
                         success: false,
-                        rule_content: None,
-                        rule_id: None,
                         message: Some(format!("Failed to read rules file: {}", e)),
+                        data: None,
                     })
                 );
             }
@@ -399,11 +407,10 @@ pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -
             error!("Failed to open rules file: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(RuleDetailResponse {
+                Json(ApiResponse::<Rule> {
                     success: false,
-                    rule_content: None,
-                    rule_id: None,
                     message: Some(format!("Failed to open rules file: {}", e)),
+                    data: None,
                 })
             );
         }
@@ -422,11 +429,16 @@ pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -
         if current_id == rule_id {
             return (
                 StatusCode::OK,
-                Json(RuleDetailResponse {
+                Json(ApiResponse {
                     success: true,
-                    rule_content: Some(line.to_string()),
-                    rule_id: Some(rule_id),
                     message: None,
+                    data: Some(Rule {
+                        id: rule_id,
+                        content: line.to_string(),
+                        sid: extract_option(line, "sid"),
+                        msg: extract_option(line, "msg"),
+                        action: line.split_whitespace().next().map(String::from),
+                    }),
                 })
             );
         }
@@ -435,143 +447,10 @@ pub async fn get_rule_one_by_id(PathExtractor(rule_id): PathExtractor<String>) -
     // 룰을 찾지 못한 경우
     (
         StatusCode::NOT_FOUND,
-        Json(RuleDetailResponse {
+        Json(ApiResponse::<Rule> {
             success: false,
-            rule_content: None,
-            rule_id: None,
             message: Some(format!("Rule with ID '{}' not found", rule_id)),
+            data: None,
         })
     )
-}
-
-// 옵션 추출 헬퍼 함수
-fn extract_option(rule: &str, option_name: &str) -> Option<String> {
-    if let Some(options_part) = rule.split('(').nth(1) {
-        if let Some(options_end) = options_part.rfind(')') {
-            let options = &options_part[..options_end];
-            for option in options.split(';') {
-                let option = option.trim();
-                if option.starts_with(&format!("{}:", option_name)) {
-                    let value_start = option_name.len() + 1; // +1 for ":"
-                    if option.len() > value_start {
-                        let value = &option[value_start..];
-                        // 따옴표 처리
-                        if value.starts_with('"') && value.ends_with('"') && value.len() >= 2 {
-                            return Some(value[1..value.len()-1].to_string());
-                        }
-                        return Some(value.to_string());
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
-// Suricata 규칙 검증 함수
-fn validate_rule_syntax(rule: &str) -> Result<(), String> {
-    // 1. 기본 형식 검증: action, header, options 구조 확인
-    let rule = rule.trim();
-    
-    // 빈 규칙 확인
-    if rule.is_empty() {
-        return Err("Rule cannot be empty".to_string());
-    }
-    
-    // 주석 규칙은 항상 유효
-    if rule.starts_with('#') {
-        return Ok(());
-    }
-    
-    // 2. 기본 구조 검증: 'action proto src_ip src_port -> dst_ip dst_port (options)'
-    let parts: Vec<&str> = rule.split('(').collect();
-    if parts.len() != 2 {
-        return Err("Rule must contain header and options parts separated by '('".to_string());
-    }
-    
-    let header = parts[0].trim();
-    let options = parts[1].trim();
-    
-    // 3. 헤더 부분 검증
-    let header_parts: Vec<&str> = header.split_whitespace().collect();
-    if header_parts.len() < 7 {
-        return Err("Header must contain at least: action, proto, src_ip, src_port, direction, dst_ip, dst_port".to_string());
-    }
-    
-    // 4. 액션 검증
-    let action = header_parts[0];
-    match action {
-        "alert" | "drop" | "reject" | "pass" | "log" => {},
-        _ => return Err(format!("Invalid action: {}. Must be one of: alert, drop, reject, pass, log", action)),
-    }
-    
-    // 5. 방향 연산자 검증
-    if header_parts[4] != "->" && header_parts[4] != "<>" {
-        return Err(format!("Invalid direction operator: {}. Must be -> or <>", header_parts[4]));
-    }
-    
-    // 6. 옵션 부분 검증
-    if !options.ends_with(')') {
-        return Err("Options must end with ')'".to_string());
-    }
-    
-    // 옵션 내용 검증 (괄호 제거)
-    let options = &options[..options.len() - 1];
-    let option_parts: Vec<&str> = options.split(';').collect();
-    
-    // 최소 하나의 옵션은 있어야 함
-    if option_parts.is_empty() || option_parts[0].trim().is_empty() {
-        return Err("At least one option is required".to_string());
-    }
-    
-    // 7. 필수 옵션 검증: sid, msg
-    let has_sid = option_parts.iter().any(|opt| opt.trim().starts_with("sid:"));
-    let has_msg = option_parts.iter().any(|opt| opt.trim().starts_with("msg:"));
-    
-    if !has_sid {
-        return Err("Missing required option: sid".to_string());
-    }
-    
-    if !has_msg {
-        return Err("Missing required option: msg".to_string());
-    }
-    
-    // 8. sid 형식 검증 (숫자여야 함)
-    for opt in option_parts {
-        let opt = opt.trim();
-        if opt.starts_with("sid:") {
-            let sid_value = opt[4..].trim();
-            if sid_value.parse::<u64>().is_err() {
-                return Err(format!("Invalid sid format: {}. Must be a number", sid_value));
-            }
-        }
-    }
-    
-    Ok(())
-}
-
-// Suricata 규칙 리로드 함수
-async fn reload_suricata_rules() -> Result<(), String> {
-    // 컨테이너 환경에서는 다음과 같이 구현할 수 있음
-    // 1. suricatasc 명령어로 직접 리로드
-    let output = Command::new("docker")
-        .args(&["exec", "suricata", "suricatasc", "-c", "reload-rules"])
-        .output()
-        .await
-        .map_err(|e| format!("Failed to execute reload command: {}", e))?;
-        
-    if !output.status.success() {
-        let error = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Failed to reload rules: {}", error));
-    }
-    
-    info!("Suricata rules reloaded successfully");
-    Ok(())
-}
-
-// 규칙 ID 생성 함수
-fn generate_rule_id(rule_content: &str) -> String {
-    let mut hasher = DefaultHasher::new();
-    rule_content.hash(&mut hasher);
-    format!("rule_{:x}", hasher.finish())
 }

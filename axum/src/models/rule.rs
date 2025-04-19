@@ -3,40 +3,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 pub struct RuleRequest {
     pub rule_content: String,
-    pub rule_type: String, // "ids" 또는 "ips"
-    pub filename: Option<String>, // 저장할 파일명 (옵션)
+    pub rule_type: Option<String>, 
+    pub filename: Option<String>,
 }
 
+// 통합된 API 응답 구조체
 #[derive(Debug, Serialize)]
-pub struct RuleResponse {
+pub struct ApiResponse<T> {
     pub success: bool,
-    pub message: String,
-    pub rule_id: Option<String>,
+    pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<T>,
 }
 
-
-
-#[derive(Serialize)]
-pub struct RuleInfo {
+// 기본 룰 정보
+#[derive(Debug, Serialize)]
+pub struct Rule {
     pub id: String,
     pub content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub msg: Option<String>,
-    pub action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<String>,
 }
 
-#[derive(Serialize)]
-pub struct RulesListResponse {
-    pub success: bool,
-    pub rules: Vec<RuleInfo>,
+// 규칙 목록
+#[derive(Debug, Serialize)]
+pub struct RulesList {
+    pub rules: Vec<Rule>,
     pub count: usize,
-}
-
- 
-#[derive(Serialize)]
-pub struct RuleDetailResponse {
-    pub success: bool,
-    pub rule_content: Option<String>,
-    pub rule_id: Option<String>,
-    pub message: Option<String>,
 }
