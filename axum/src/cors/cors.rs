@@ -1,4 +1,4 @@
-use tower_http::cors::{CorsLayer};
+use tower_http::cors::CorsLayer;
 use axum;
 
 pub fn create_cors() -> CorsLayer {
