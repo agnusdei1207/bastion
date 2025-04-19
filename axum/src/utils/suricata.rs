@@ -1,7 +1,17 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{env, hash::{DefaultHasher, Hash, Hasher}};
 
 use tokio::process::Command;
 use tracing::info;
+
+use dotenvy::dotenv;
+
+// 환경변수 조회
+pub fn get_env() -> (String, String) {
+    dotenv().ok();
+    let rules_dir = env::var("SURICATA_RULES_DIR").unwrap_or_else(|_| "/var/lib/suricata/rules".to_string());
+    let default_filename = env::var("SURICATA_CUSTOM_RULE_FILENAME").unwrap_or_else(|_| "custom.rules".to_string());
+    (rules_dir, default_filename)
+}
 
 
 // Suricata 규칙 검증 함수

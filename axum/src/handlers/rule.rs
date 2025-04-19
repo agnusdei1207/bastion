@@ -9,14 +9,12 @@ use axum::{
 use tracing::{error, info};
 
 use crate::models::rule::{ApiResponse, RuleRequest, Rule, RulesList};
-use crate::utils::suricata::{extract_option, generate_rule_id, reload_suricata_rules, validate_rule_syntax};
+use crate::utils::suricata::{extract_option, generate_rule_id, get_env, reload_suricata_rules, validate_rule_syntax};
 
 // 룰 추가 핸들러
 pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
-    let rules_dir = "/var/lib/suricata/rules";
-    let filename = payload.filename.as_deref().unwrap_or("custom.rules");
-
-    let file_path = Path::new(rules_dir).join(filename);
+    let (rules_dir, filename) = get_env();
+    let file_path = Path::new(&rules_dir).join(&filename);
 
     // 룰 유효성 검증
     if let Err(validation_error) = validate_rule_syntax(&payload.rule_content) {
@@ -138,11 +136,9 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
 
 // 룰 삭제 핸들러
 pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl IntoResponse {
-    let rules_dir = "/var/lib/suricata/rules";
-    let filename = "custom.rules";
+    let (rules_dir, filename) = get_env();
+    let file_path = Path::new(&rules_dir).join(&filename);
 
-    let file_path = Path::new(rules_dir).join(filename);
-    
     // 파일이 존재하는지 확인
     if !file_path.exists() {
         return (
@@ -277,10 +273,9 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
 
 // 모든 룰 목록 조회 핸들러
 pub async fn list_rules() -> impl IntoResponse {
-    let rules_dir = "/var/lib/suricata/rules";
-    let filename = "custom.rules";
-    let file_path = Path::new(rules_dir).join(filename);
-    
+    let (rules_dir, filename) = get_env();
+    let file_path = Path::new(&rules_dir).join(&filename);
+
     // 파일이 존재하는지 확인
     if !file_path.exists() {
         return (
@@ -370,10 +365,9 @@ pub async fn list_rules() -> impl IntoResponse {
 
 // 특정 ID의 룰 상세 조회 핸들러 (단순화 버전)
 pub async fn get_rule_by_id(PathExtractor(rule_id): PathExtractor<String>) -> impl IntoResponse {
-    let rules_dir = "/var/lib/suricata/rules";
-    let filename = "custom.rules";
-    let file_path = Path::new(rules_dir).join(filename);
-    
+    let (rules_dir, filename) = get_env();
+    let file_path = Path::new(&rules_dir).join(&filename);
+
     // 파일이 존재하는지 확인
     if !file_path.exists() {
         return (
