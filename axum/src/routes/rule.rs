@@ -3,12 +3,16 @@ use axum::{
     Router,
 };
 
-use crate::handlers::rule::{add_rule, delete_rule, get_rule_by_id, list_rules};
+use crate::handlers::rule::{create_rule, delete_rule, get_rule, get_rules};
 
 pub fn router_rule() -> Router {
     Router::new()
-    .route("/rules", get(list_rules))
-    .route("/rules/:id" , get(get_rule_by_id))
-    .route("/rules", post(add_rule))
-    .route("/rules/:id", delete(delete_rule))
+        .nest(
+            "/rules", 
+            Router::new()
+                .route("/", get(get_rules))
+                .route("/:id", get(get_rule))
+                .route("/", post(create_rule))
+                .route("/:id", delete(delete_rule))
+        )
 }
