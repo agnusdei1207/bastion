@@ -5,7 +5,7 @@ use axum::{
 
 use crate::handlers::rule::{add_rule, delete_rule, get_rule_by_id, list_rules};
 
-pub fn post_rule() -> Router {
+pub fn router_rule() -> Router {
     Router::new()
     .route("/rules", get(list_rules))
     .route("/rules/:id" , get(get_rule_by_id))

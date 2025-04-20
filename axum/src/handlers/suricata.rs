@@ -39,7 +39,7 @@ pub async fn reload_suricata_rules() -> Result<(), String> {
 }
 
 // 수리카타 규칙 통계 확인
-pub async fn get_suricata_rule_stats() -> Result<String, String> {
+pub async fn get_suricata_rule_statistics() -> Result<String, String> {
     // 컨테이너 환경에서는 다음과 같이 구현할 수 있음
     // 1. suricatasc 명령어로 직접 리로드
     let output = Command::new("docker")
