@@ -343,9 +343,8 @@ let (rules_dir, filename) = get_env();
 
 // 특정 ID의 룰 상세 조회 핸들러 (단순화 버전)
 pub async fn get_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl IntoResponse {
-    let rules_dir = "/var/lib/suricata/rules";
-    let filename = "custom.rules";
-    let file_path = Path::new(rules_dir).join(filename);
+    let (rules_dir, filename) = get_env();
+    let file_path = Path::new(&rules_dir).join(&filename);
     
     // 파일이 존재하는지 확인
     if !file_path.exists() {
