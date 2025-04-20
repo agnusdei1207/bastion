@@ -1,22 +1,20 @@
+# 빌드 스테이지
+FROM alpine AS builder
+
+# 설정 파일 준비
+RUN mkdir -p /tmp/fluent-bit/etc /tmp/fluent-bit/scripts /tmp/fluent-bit/log
+COPY docker/fluent-bit/fluent-bit.conf /tmp/fluent-bit/etc/
+COPY docker/fluent-bit/parser.conf /tmp/fluent-bit/etc/parsers.conf
+COPY docker/fluent-bit/jsonb.lua /tmp/fluent-bit/scripts/
+
+# 최종 스테이지
 FROM fluent/fluent-bit:latest
 
-USER root
+# 빌드 스테이지에서 파일 복사
+COPY --from=builder /tmp/fluent-bit/etc/fluent-bit.conf /fluent-bit/etc/
+COPY --from=builder /tmp/fluent-bit/etc/parsers.conf /fluent-bit/etc/parsers.conf
+COPY --from=builder /tmp/fluent-bit/scripts/jsonb.lua /fluent-bit/scripts/
+COPY --from=builder --chown=1000:1000 /tmp/fluent-bit/log /fluent-bit/log/
 
-# Lua JSON 모듈 설치용 luarocks 추가
-RUN apk add --no-cache lua5.1 lua5.1-dev luarocks build-base \
-    && luarocks install dkjson \
-    && apk del build-base
-
-# 설정 파일 복사
-COPY docker/fluent-bit/fluent-bit.conf /fluent-bit/etc/fluent-bit.conf
-COPY docker/fluent-bit/parser.conf /fluent-bit/etc/parsers.conf
-COPY docker/fluent-bit/jsonb.lua /fluent-bit/scripts/jsonb.lua
-
-# 로그 디렉토리 생성 및 권한 설정
-RUN mkdir -p /fluent-bit/log && \
-    chown -R fluent:fluent /fluent-bit/log
-
-USER fluent
-
-# 설정 파일 경로 지정하여 실행
+# 실행 설정
 CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
