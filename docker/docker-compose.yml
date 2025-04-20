@@ -46,16 +46,25 @@ services:
   axum:
     container_name: axum
     image: agnusdei1207/axum:latest
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      fluent-bit:
+        condition: service_started
     volumes:
       - axum-volume:/logs
       - /var/run/docker.sock:/var/run/docker.sock
       - suricata-rules:/var/lib/suricata/rules:rw
-    depends_on:
-      fluent-bit:
-        condition: service_started
-    restart: unless-stopped
+    environment:
+      # API
+      - API_SERVER_URL=http://localhost:8000
+      - CENTRAL_API_SERVER_URL=https://api.bastion/api
+      # Suricata
+      - SURICATA_RULES_DIR=/var/lib/suricata/rules
+      - SURICATA_CUSTOM_RULE_FILENAME=custom.rules
+      - SURICATA_LOG_DIR=/var/log/suricata
+      - SURICATA_LOG_FILE=/var/log/suricata/eve.json
+    ports:
+      - "3000:3000"
     networks:
       - bastion-network
     logging:

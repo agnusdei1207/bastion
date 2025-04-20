@@ -8,7 +8,7 @@ COPY docker/fluent-bit/parser.conf /tmp/fluent-bit/etc/parsers.conf
 COPY docker/fluent-bit/jsonb.lua /tmp/fluent-bit/scripts/
 
 # 최종 스테이지
-FROM fluent/fluent-bit:latest
+FROM fluent/fluent-bit:4.0.0-amd64
 
 # 빌드 스테이지에서 파일 복사
 COPY --from=builder /tmp/fluent-bit/etc/fluent-bit.conf /fluent-bit/etc/
