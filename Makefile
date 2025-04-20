@@ -13,13 +13,13 @@ sqlx-prepare:
 	cd axum && cargo sqlx prepare
 push-axum:
 	./docker/axum/push.sh
-push-fluentd:
-	./docker/fluentd/push.sh
+push-fluent-bit:
+	./docker/fluent-bit/push.sh
 push-suricata:
 	./docker/suricata/push.sh
 push-all:
 	./docker/axum/push.sh
-	./docker/fluentd/push.sh
+	./docker/fluent-bit/push.sh
 	./docker/suricata/push.sh
 
 # ssh

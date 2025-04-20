@@ -25,25 +25,22 @@ services:
         max-size: "50m"
         max-file: "3"
 
-  fluentd:
-    container_name: fluentd
-    image: agnusdei1207/fluentd:latest
+  fluentbit:
+    container_name: fluent-bit
+    image: agnusdei1207/fluent-bit:latest
     volumes:
       - suricata-log:/var/log/suricata:ro
-      - fluentd-volume:/fluentd/state
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - FLUENTD_LOG_LEVEL=debug
+      - fluentbit-volume:/fluent-bit/log
     depends_on:
       suricata:
         condition: service_started
-    restart: unless-stopped
     networks:
       - bastion-network
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "100m"
         max-file: "3"
 
   axum:
@@ -56,7 +53,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - suricata-rules:/var/lib/suricata/rules:rw
     depends_on:
-      fluentd:
+      fluent-bit:
         condition: service_started
     restart: unless-stopped
     networks:
@@ -74,7 +71,7 @@ volumes:
     driver: local
   suricata-rules:
     driver: local
-  fluentd-volume:
+  fluentbit-volume:
     driver: local
   axum-volume:
     driver: local
