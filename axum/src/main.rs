@@ -1,5 +1,5 @@
 use axum::{
-     routing::get, Error, Extension, Router
+     routing::get, Error, Router
 };
 use routes::routes;
 use tracing::{info, Level};

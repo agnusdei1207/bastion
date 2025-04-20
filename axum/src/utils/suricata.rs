@@ -1,8 +1,5 @@
 use std::{env, hash::{DefaultHasher, Hash, Hasher}};
 
-use tokio::process::Command;
-use tracing::info;
-
 use dotenvy::dotenv;
 
 // 환경변수 조회
@@ -96,24 +93,6 @@ pub fn validate_rule_syntax(rule: &str) -> Result<(), String> {
     Ok(())
 }
 
-// Suricata 규칙 리로드 함수
-pub async fn reload_suricata_rules() -> Result<(), String> {
-    // 컨테이너 환경에서는 다음과 같이 구현할 수 있음
-    // 1. suricatasc 명령어로 직접 리로드
-    let output = Command::new("docker")
-        .args(&["exec", "suricata", "suricatasc", "-c", "reload-rules"])
-        .output()
-        .await
-        .map_err(|e| format!("Failed to execute reload command: {}", e))?;
-        
-    if !output.status.success() {
-        let error = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("Failed to reload rules: {}", error));
-    }
-    
-    info!("Suricata rules reloaded successfully");
-    Ok(())
-}
 
 // 규칙 ID 생성 함수
 pub fn generate_rule_id(rule_content: &str) -> String {

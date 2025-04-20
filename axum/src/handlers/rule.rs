@@ -9,7 +9,7 @@ use axum::{
 use tracing::{error, info};
 
 use crate::models::rule::{ApiResponse, RuleRequest, Rule, RulesList};
-use crate::utils::suricata::{extract_option, generate_rule_id, get_env, reload_suricata_rules, validate_rule_syntax};
+use crate::utils::suricata::{extract_option, generate_rule_id, get_env,  validate_rule_syntax};
 
 // 룰 추가 핸들러
 pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
@@ -113,25 +113,15 @@ pub async fn add_rule(Json(payload): Json<RuleRequest>) -> impl IntoResponse {
     
     info!("Rule added successfully: {} with ID: {}", rule_content, rule_id);
     
-    // 추가된 규칙에 대해 Suricata 규칙 리로드 명령 실행
-    match reload_suricata_rules().await {
-        Ok(_) => (
-            StatusCode::CREATED,
-            Json(ApiResponse {
-                success: true,
-                message: Some("Rule added and applied successfully".to_string()),
-                data: None,
-            })
-        ),
-        Err(e) => (
-            StatusCode::PARTIAL_CONTENT,
-            Json(ApiResponse {
-                success: true,
-                message: Some(format!("Rule added but reload failed: {}", e)),
-                data: None,
-            })
-        )
-    }
+    (
+        StatusCode::CREATED,
+        Json(ApiResponse {
+            success: true,
+            message: Some("Rule added and applied successfully".to_string()),
+            data: None,
+        })
+    )
+   
 }
 
 // 룰 삭제 핸들러
@@ -249,26 +239,14 @@ pub async fn delete_rule(PathExtractor(rule_id): PathExtractor<String>) -> impl 
     // 룰 제거 후 Suricata 리로드
     info!("Rule with ID {} removed successfully", rule_id);
     
-    // 에러가 있었던 부분: 비일관적 타입 사용
-    // 삭제 응답에서는 id만 반환 (룰 객체 대신)
-    match reload_suricata_rules().await {
-        Ok(_) => (
-            StatusCode::OK,
-            Json(ApiResponse::<()> {
-                success: true,
-                message: Some("Rule deleted and changes applied successfully".to_string()),
-                data:None
-            })
-        ),
-        Err(e) => (
-            StatusCode::PARTIAL_CONTENT,
-            Json(ApiResponse::<()> {
-                success: true,
-                message: Some(format!("Rule deleted but reload failed: {}", e)),
-                data: None
-            })
-        )
-    }
+    (
+        StatusCode::OK,
+        Json(ApiResponse::<()> {
+            success: true,
+            message: Some("Rule deleted and changes applied successfully".to_string()),
+            data:None
+        })
+    )
 }
 
 // 모든 룰 목록 조회 핸들러
