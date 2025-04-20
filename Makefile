@@ -30,4 +30,11 @@ scp:
 scp -i k.pem script/provisioning.sh ubuntu@216.47.98.91:/home/ubuntu/provisioning.sh
 provisioning: 
 	ssh -i k.pem ubuntu@216.47.98.91 'bash /home/ubuntu/provisioning.sh'
-
+restart-docker-compose:
+	ssh -i k.pem ubuntu@216.47.98.91 'sudo docker compose down -v && \
+	sudo docker rmi agnusdei1207/axum:latest agnusdei1207/fluent-bit:latest && \
+	sudo docker compose -f /home/ubuntu/docker-compose.yml pull && \
+	sudo docker compose -f /home/ubuntu/docker-compose.yml up -d && \
+	sudo docker compose logs'
+logs:
+	ssh -i k.pem ubuntu@216.47.98.91 ''sudo docker compose logs -f'
