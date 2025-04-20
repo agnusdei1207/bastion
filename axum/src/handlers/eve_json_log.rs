@@ -26,6 +26,7 @@ pub async fn send_eve_json_log(
             ));
         }
     };
+
     
     // 문자열을 JSON으로 파싱
     let json_data: Value = match serde_json::from_slice(&bytes) {
@@ -83,6 +84,8 @@ pub async fn send_eve_json_log(
                 continue;
             }
         };
+
+        info!("EveJsonLog 항목: {:?}", log_item);
         
         // 외부 API 호출
         let response: reqwest::Response = match client
